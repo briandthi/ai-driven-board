@@ -6,9 +6,9 @@
 - [ ] Initialiser le repository Git avec structure complète :
   ```
   board-ai/
-  ├── frontend/          # App React + TanStack + shadcn
-  ├── backend/           # FastAPI + MCP + LangGraph
-  ├── nginx/            # Config Nginx reverse proxy
+  ├── app/          # App React + TanStack + shadcn
+  ├── api/           # FastAPI + MCP + LangGraph
+  ├── nginx.conf            # Config Nginx reverse proxy
   ├── mongo/            # Scripts et config MongoDB
   ├── docker-compose.yml
   ├── .env.example
@@ -19,8 +19,8 @@
 
 ### 2. Configuration Docker
 - [ ] Créer `docker-compose.yml` avec services :
-  - Service `backend` (FastAPI + MCP)
-  - Service `frontend` (React build + nginx)
+  - Service `api` (FastAPI + MCP)
+  - Service `app` (React build + nginx)
   - Service `mongodb` avec persistence
   - Service `nginx` (reverse proxy)
   - Réseau interne pour communication inter-services
@@ -29,22 +29,22 @@
   - Connection strings MongoDB
   - API keys LLM (OpenAI/Anthropic)
   - Secrets JWT et sessions
-  - Ports et URLs frontend/backend
+  - Ports et URLs app/api
 
 ### 3. Test de l'infrastructure
 - [ ] Lancer `docker-compose up --build`
 - [ ] Vérifier que MongoDB démarre et accepte les connexions
-- [ ] Vérifier que le backend FastAPI répond sur `/health`
-- [ ] Vérifier que le frontend est servi par nginx
+- [ ] Vérifier que le api FastAPI répond sur `/health`
+- [ ] Vérifier que le app est servi par nginx
 - [ ] Test de la persistance des données MongoDB
 
-## 🔧 Setup Backend FastAPI
+## 🔧 Setup api FastAPI
 
 ### 4. Initialisation FastAPI
-- [ ] Créer l'app FastAPI dans `backend/` avec structure :
+- [ ] Créer l'app FastAPI dans `api/` avec structure :
   ```
-  backend/
-  ├── app/
+  api/
+  ├── src/
   │   ├── main.py
   │   ├── api/v1/
   │   │   ├── boards.py
@@ -65,7 +65,7 @@
   └── Dockerfile
   ```
 - [ ] Installer les dépendances : `fastapi`, `uvicorn`, `motor`, `beanie`, `pydantic`
-- [ ] Configuration CORS pour permettre les requêtes frontend
+- [ ] Configuration CORS pour permettre les requêtes app
 - [ ] Endpoint `/health` pour monitoring Docker
 
 ### 5. Configuration MongoDB + Beanie
@@ -149,10 +149,10 @@
 - [ ] Logique de sélection/création board automatique selon contexte
 - [ ] Système de suggestions d'amélioration des items existants
 
-## ⚛️ Setup Frontend React
+## ⚛️ Setup app React
 
 ### 12. Initialisation React + TanStack
-- [ ] Créer app React avec Vite dans `frontend/` 
+- [ ] Créer app React avec Vite dans `app/` 
 - [ ] Installer les dépendances exactes :
   - `@tanstack/react-query` + `@tanstack/react-query-devtools`
   - `tailwindcss` + `autoprefixer` + `postcss`
@@ -194,7 +194,7 @@
 - [ ] Créer `api.ts` avec client axios/fetch :
   - Configuration base URL depuis variables env
   - Intercepteurs pour gestion erreurs
-  - Méthodes pour tous les endpoints backend
+  - Méthodes pour tous les endpoints api
 - [ ] Définir types TypeScript complets :
   - `Board` : id, nom, description, couleur, timestamps
   - `Item` : tous champs + métadonnées dynamiques (Record<string, any>)
@@ -291,11 +291,11 @@
 ## 🚀 Dockerisation et déploiement
 
 ### 22. Dockerfiles optimisés
-- [ ] `frontend/Dockerfile` multi-stage :
+- [ ] `app/Dockerfile` multi-stage :
   - Stage build : npm install + build React optimisé
   - Stage prod : nginx alpine avec fichiers statiques
   - Configuration nginx pour SPA (fallback index.html)
-- [ ] `backend/Dockerfile` optimisé :
+- [ ] `api/Dockerfile` optimisé :
   - Image Python 3.11-slim
   - Installation dépendances avec cache layers
   - User non-root pour sécurité
@@ -303,14 +303,14 @@
 
 ### 23. Docker Compose production
 - [ ] Configuration `docker-compose.yml` complète :
-  - Service nginx (reverse proxy + frontend statique)
-  - Service backend avec restart policy
+  - Service nginx (reverse proxy + app statique)
+  - Service api avec restart policy
   - Service mongodb avec authentification et volumes
   - Réseau interne isolé
   - Variables d'environnement sécurisées
 - [ ] Configuration nginx reverse proxy :
-  - `/api/` → backend service
-  - `/` → frontend statique
+  - `/api/` → api service
+  - `/` → app statique
   - Headers sécurité (HSTS, CSP, etc.)
   - Compression gzip
 - [ ] SSL/TLS avec Let's Encrypt (certbot) pour production
@@ -328,7 +328,7 @@
 
 ## 🧪 Tests et MVP Validation
 
-### 25. Tests fonctionnels backend
+### 25. Tests fonctionnels api
 - [ ] Tests unitaires FastAPI avec pytest :
   - Tests des endpoints CRUD boards et items
   - Tests des services IA et MCP
@@ -338,12 +338,12 @@
   - Tests de validation métadonnées dynamiques
 - [ ] Tests E2E API avec authentification simulée
 
-### 26. Tests frontend React
+### 26. Tests app React
 - [ ] Tests composants avec React Testing Library :
   - Tests des hooks TanStack Query
   - Tests d'interaction utilisateur (clicks, formulaires)
   - Tests de rendu conditionnel selon états
-- [ ] Tests d'intégration frontend-backend avec MSW
+- [ ] Tests d'intégration app-api avec MSW
 - [ ] Tests responsive sur différentes tailles écran
 
 ### 27. Préparation MVP : Board Auto-Construit
@@ -404,7 +404,7 @@
   - Tree shaking pour réduire bundle size
   - Compression assets (gzip/brotli)
 - [ ] Variables d'environnement production dans `.env` :
-  - URLs backend absolues
+  - URLs api absolues
   - API keys sécurisées
   - Feature flags pour nouvelles fonctionnalités
 - [ ] Configuration nginx production optimisée :
@@ -415,7 +415,7 @@
 ### 32. Déploiement final serveur privé
 - [ ] Lancer `docker-compose up --build -d` sur serveur
 - [ ] Vérifier tous les health checks passent :
-  - Backend `/health` retourne 200
+  - api `/health` retourne 200
   - MongoDB accepte les connexions
   - Frontend accessible et responsive
 - [ ] Test complet du workflow principal :
