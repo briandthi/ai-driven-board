@@ -39,6 +39,10 @@ services:
       context: .
       dockerfile: app/Dockerfile
     container_name: app
+    ports:
+      # - "80:80"    # HTTP standard
+      # - "443:443"  # HTTPS standard
+      - "3003:80"  # (optionnel) accès local sur 3002 si besoin
     restart: always
     env_file:
       - .env
