@@ -1,25 +1,29 @@
 services:
   mongodb:
     image: mongo:6.0
-    container_name: mongodb
-    restart: always
+    container_name: ai-driven-board-mongodb
+    restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: ${MONGODB_DB}
-    ports:
-      - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    networks:
+      - web_net
+      - aidrivenboard_internal
+    # Port uniquement accessible en interne
+    expose:
+      - "27017"
 
   api:
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: api
-    restart: always
+    container_name: ai-driven-board-api
+    restart: unless-stopped
     env_file:
       - .env
     environment:
-      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_URI: mongodb://ai-driven-board-mongodb:27017/${MONGODB_DB}
       MONGODB_DB: ${MONGODB_DB}
       API_SECRET_KEY: ${API_SECRET_KEY}
       JWT_SECRET: ${JWT_SECRET}
@@ -28,47 +32,66 @@ services:
       AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
       AZURE_OPENAI_API_URL: ${AZURE_OPENAI_API_URL}
       MCP_API_KEY: ${MCP_API_KEY}
-      MCP_URL: ${MCP_URL}
-    ports:
-      - "8000:8000"
+      MCP_URL: http://ai-driven-board-mcp:9000
+    networks:
+      - web_net
+      - aidrivenboard_internal
     depends_on:
       - mongodb
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   app:
     build:
       context: .
       dockerfile: app/Dockerfile
-    container_name: app
-    ports:
-      # - "80:80"    # HTTP standard
-      # - "443:443"  # HTTPS standard
-      - "3003:80"  # (optionnel) accès local sur 3002 si besoin
-    restart: always
+    container_name: ai-driven-board-app
+    restart: unless-stopped
     env_file:
       - .env
     environment:
       VITE_API_URL: ${VITE_API_URL}
       VITE_APP_URL: ${VITE_APP_URL}
+    networks:
+      - web_net
     depends_on:
       - api
-    # Ne pas exposer le port 80 sur l'hôte, nginx s'en charge
-    # ports:
-    #   - "80:80"
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   mcp:
     build:
       context: ./mcp
       dockerfile: Dockerfile
-    container_name: mcp
-    restart: always
+    container_name: ai-driven-board-mcp
+    restart: unless-stopped
     env_file:
       - .env
     environment:
-      API_URL: http://api:8000
+      API_URL: http://ai-driven-board-api:8000
+    networks:
+      - web_net
+      - aidrivenboard_internal
     depends_on:
       - api
-    ports:
-      - "9000:9000"
+    expose:
+      - "9000"
 
 volumes:
   mongo_data:
+
+networks:
+  web_net:
+    external: true
+  aidrivenboard_internal:
+    driver: bridge
