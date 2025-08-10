@@ -70,7 +70,7 @@ services:
       retries: 3
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ai-driven-board.rule=Host(`ai-driven-board.mon-server.fr`)"
+      - "traefik.http.routers.ai-driven-board.rule=Host(`notes.thibaultbriand.fr`)"
       - "traefik.http.routers.ai-driven-board.entrypoints=websecure"
       - "traefik.http.routers.ai-driven-board.tls.certresolver=myresolver"
 
