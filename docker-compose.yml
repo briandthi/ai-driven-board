@@ -1,7 +1,7 @@
 services:
   mongodb:
     image: mongo:6.0
-    container_name: ai-driven-board-mongodb
+    container_name: mongodb
     restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: ${MONGODB_DB}
@@ -18,12 +18,12 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: ai-driven-board-api
+    container_name: api
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      MONGODB_URI: mongodb://ai-driven-board-mongodb:27017/${MONGODB_DB}
+      MONGODB_URI: mongodb://mongodb:27017/${MONGODB_DB}
       MONGODB_DB: ${MONGODB_DB}
       API_SECRET_KEY: ${API_SECRET_KEY}
       JWT_SECRET: ${JWT_SECRET}
@@ -32,7 +32,7 @@ services:
       AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
       AZURE_OPENAI_API_URL: ${AZURE_OPENAI_API_URL}
       MCP_API_KEY: ${MCP_API_KEY}
-      MCP_URL: http://ai-driven-board-mcp:9000
+      MCP_URL: http://mcp:9000
     networks:
       - web_net
       - aidrivenboard_internal
@@ -50,7 +50,7 @@ services:
     build:
       context: .
       dockerfile: app/Dockerfile
-    container_name: ai-driven-board-app
+    container_name: app
     restart: unless-stopped
     env_file:
       - .env
@@ -73,12 +73,12 @@ services:
     build:
       context: ./mcp
       dockerfile: Dockerfile
-    container_name: ai-driven-board-mcp
+    container_name: mcp
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      API_URL: http://ai-driven-board-api:8000
+      API_URL: http://api:8000
     networks:
       - web_net
       - aidrivenboard_internal
