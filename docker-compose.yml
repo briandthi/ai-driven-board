@@ -47,8 +47,9 @@ services:
       VITE_APP_URL: ${VITE_APP_URL}
     depends_on:
       - api
-    ports:
-      - "80:80"
+    # Ne pas exposer le port 80 sur l'hôte, nginx s'en charge
+    # ports:
+    #   - "80:80"
 
   mcp:
     build:
