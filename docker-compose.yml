@@ -8,11 +8,10 @@ services:
     volumes:
       - mongo_data:/data/db
     networks:
-      - web_net
+      - webproxy
       - aidrivenboard_internal
-    # Port uniquement accessible en interne
     expose:
-      - "27017"
+      - "27017"  # accessible uniquement en interne sur les réseaux
 
   api:
     build:
@@ -35,7 +34,7 @@ services:
       MCP_API_KEY: ${MCP_API_KEY}
       MCP_URL: http://mcp:9000
     networks:
-      - web_net
+      - webproxy
       - aidrivenboard_internal
     depends_on:
       - mongodb
@@ -59,7 +58,7 @@ services:
       VITE_API_URL: ${VITE_API_URL}
       VITE_APP_URL: ${VITE_APP_URL}
     networks:
-      - web_net
+      - webproxy
     depends_on:
       - api
     expose:
@@ -69,6 +68,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ai-driven-board.rule=Host(`ai-driven-board.mon-server.fr`)"
+      - "traefik.http.routers.ai-driven-board.entrypoints=websecure"
+      - "traefik.http.routers.ai-driven-board.tls.certresolver=myresolver"
 
   mcp:
     build:
@@ -81,7 +85,7 @@ services:
     environment:
       API_URL: http://api:8000
     networks:
-      - web_net
+      - webproxy
       - aidrivenboard_internal
     depends_on:
       - api
@@ -92,7 +96,7 @@ volumes:
   mongo_data:
 
 networks:
-  web_net:
+  webproxy:
     external: true
   aidrivenboard_internal:
     driver: bridge
