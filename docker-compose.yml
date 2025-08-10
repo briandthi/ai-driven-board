@@ -23,6 +23,7 @@ services:
     env_file:
       - .env
     environment:
+      PYTHONPATH: /app/src
       MONGODB_URI: mongodb://mongodb:27017/${MONGODB_DB}
       MONGODB_DB: ${MONGODB_DB}
       API_SECRET_KEY: ${API_SECRET_KEY}
