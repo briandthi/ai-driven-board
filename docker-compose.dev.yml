@@ -1,0 +1,78 @@
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGODB_DB}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    image: python:3.13-slim
+    container_name: api
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_DB: ${MONGODB_DB}
+      API_SECRET_KEY: ${API_SECRET_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES}
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
+      AZURE_OPENAI_API_URL: ${AZURE_OPENAI_API_URL}
+      MCP_API_KEY: ${MCP_API_KEY}
+      MCP_URL: ${MCP_URL}
+    working_dir: /app
+    volumes:
+      - ./api:/app
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt && PYTHONPATH=/app/src uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+
+  app:
+    image: node:22-alpine
+    container_name: app
+    restart: always
+    env_file:
+      - .env
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+      VITE_APP_URL: ${VITE_APP_URL}
+    working_dir: /app
+    volumes:
+      - ./app:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+  # Ajout d'un service MCP pour lancer le serveur MCP Python dans le même environnement que l'API
+  mcp:
+    image: python:3.13-slim
+    container_name: mcp
+    restart: always
+    env_file:
+      - .env
+    environment:
+      API_URL: http://api:8000
+    working_dir: /app
+    volumes:
+      - ./mcp:/app
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt && PYTHONPATH=/app/src python src/mcp_service.py"
+    ports:
+      - "9000:9000"
+    depends_on:
+      - api
+
+volumes:
+  mongo_data:

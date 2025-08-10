@@ -3,45 +3,47 @@
 ## 🐳 Setup Docker & Infrastructure
 
 ### 1. Structure du projet
-- [ ] Initialiser le repository Git avec structure complète :
+- [x] Initialiser le repository Git avec structure complète :
   ```
-  board-ai/
+  ai-driven-board/
   ├── app/          # App React + TanStack + shadcn
-  ├── api/           # FastAPI + MCP + LangGraph
-  ├── nginx.conf            # Config Nginx reverse proxy
+  ├── api/           # FastAPI  + LangGraph
+  ├── mcp/           #  MCP
+  ├── /nginx           # Config Nginx reverse proxy
   ├── mongo/            # Scripts et config MongoDB
   ├── docker-compose.yml
   ├── .env.example
   └── README.md
   ```
-- [ ] Créer `.gitignore` global (node_modules, __pycache__, .env, etc.)
-- [ ] Setup `.env.example` avec toutes les variables nécessaires
+- [x] Créer `.gitignore` global (node_modules, __pycache__, .env, etc.)
+- [x] Setup `.env.example` avec toutes les variables nécessaires
 
 ### 2. Configuration Docker
-- [ ] Créer `docker-compose.yml` avec services :
-  - Service `api` (FastAPI + MCP)
+- [x] Créer `docker-compose.yml` avec services :
+  - Service `api` (FastAPI)
+  - Service `mcp` (MCP)
   - Service `app` (React build + nginx)
   - Service `mongodb` avec persistence
   - Service `nginx` (reverse proxy)
   - Réseau interne pour communication inter-services
   - Volumes persistants pour données MongoDB
-- [ ] Variables d'environnement pour :
+- [x] Variables d'environnement pour :
   - Connection strings MongoDB
   - API keys LLM (OpenAI/Anthropic)
   - Secrets JWT et sessions
   - Ports et URLs app/api
 
 ### 3. Test de l'infrastructure
-- [ ] Lancer `docker-compose up --build`
-- [ ] Vérifier que MongoDB démarre et accepte les connexions
-- [ ] Vérifier que le api FastAPI répond sur `/health`
-- [ ] Vérifier que le app est servi par nginx
-- [ ] Test de la persistance des données MongoDB
+- [x] Lancer `docker-compose up --build`
+- [x] Vérifier que MongoDB démarre et accepte les connexions
+- [x] Vérifier que le api FastAPI répond sur `/health`
+- [x] Vérifier que le app est servi par nginx
+- [x] Test de la persistance des données MongoDB
 
 ## 🔧 Setup api FastAPI
 
 ### 4. Initialisation FastAPI
-- [ ] Créer l'app FastAPI dans `api/` avec structure :
+- [x] Créer l'app FastAPI dans `api/` avec structure :
   ```
   api/
   ├── src/
@@ -49,13 +51,15 @@
   │   ├── api/v1/
   │   │   ├── boards.py
   │   │   ├── items.py
+  │   │   ├── schemas.py
   │   │   └── ai.py
   │   ├── core/
   │   │   ├── config.py
   │   │   └── database.py
   │   ├── models/
   │   │   ├── board.py
-  │   │   └── item.py
+  │   │   ├── item.py
+  │   │   └── item_schema.py
   │   ├── services/
   │   │   ├── ai_service.py
   │   │   └── mcp_service.py
@@ -64,52 +68,84 @@
   ├── requirements.txt
   └── Dockerfile
   ```
-- [ ] Installer les dépendances : `fastapi`, `uvicorn`, `motor`, `beanie`, `pydantic`
-- [ ] Configuration CORS pour permettre les requêtes app
-- [ ] Endpoint `/health` pour monitoring Docker
+- [x] Installer les dépendances : `fastapi`, `uvicorn`, `motor`, `beanie`, `pydantic`
+- [x] Configuration CORS pour permettre les requêtes app
+- [x] Endpoint `/health` pour monitoring Docker
 
 ### 5. Configuration MongoDB + Beanie
-- [ ] Créer `database.py` avec connection MongoDB async (Motor)
-- [ ] Setup Beanie ODM pour les modèles
-- [ ] Créer `Board` model :
+- [x] Créer `database.py` avec connection MongoDB async (Motor)
+- [x] Setup Beanie ODM pour les modèles
+- [x] Créer `Board` model :
   - Nom, description, couleur
   - Date création/modification
   - Métadonnées dynamiques
-- [ ] Créer `Item` model avec champs flexibles :
+- [x] Créer `Item` model avec champs flexibles :
   - Titre, type, descriptions (fonctionnelle/technique)
   - Statut, checklist, board_id
   - Métadonnées dynamiques (dict)
   - Timestamps automatiques
-- [ ] Index MongoDB sur `board_id` et champs fréquents
+- [x] Créer `ItemSchema` model :
+  - type d'item (string)
+  - version (int ou string)
+  - schéma (dict/json)
+  - date de création
+  - auteur (optionnel, IA ou humain)
+- [x] Index MongoDB sur `board_id`, `type` (items), et `type/version` (item_schemas)
 
 ### 6. API REST de base
-- [ ] Router `boards.py` avec CRUD complet :
+- [x] Router `boards.py` avec CRUD complet :
   - `GET /boards/` : Liste tous les boards
   - `POST /boards/` : Créer nouveau board
   - `GET /boards/{id}` : Détail d'un board
   - `PUT /boards/{id}` : Modifier board
   - `DELETE /boards/{id}` : Supprimer board
-- [ ] Router `items.py` avec CRUD complet :
+- [x] Router `items.py` avec CRUD complet :
   - `GET /boards/{board_id}/items` : Items d'un board
   - `POST /items/` : Créer nouvel item
   - `GET /items/{id}` : Détail item
   - `PUT /items/{id}` : Modifier item complet
-  - `PATCH /items/{id}/status` : Changer statut uniquement
-  - `PATCH /items/{id}/checklist` : Modifier checklist
+  - `PATCH /items/{id}` : Changer partiellement l'item
   - `DELETE /items/{id}` : Supprimer item
-- [ ] Documentation Swagger automatique accessible sur `/docs`
+- [x] Router `schemas.py` avec gestion des schémas d'item :
+  - `GET /schemas/{item_type}` : Liste des versions de schéma pour un type d'item
+  - `POST /schemas/` : Créer une nouvelle version de schéma pour un type d'item
+  - `GET /schemas/{item_type}/latest` : Récupérer le schéma courant d'un type d'item
+  - (optionnel) `GET /schemas/` : Lister tous les types d'item connus
+- [x] Documentation Swagger automatique accessible sur `/docs`
 
-### 7. Service de validation métadonnées
-- [ ] Créer `MetadataValidator` dans `utils/` :
-  - Normalisation des noms de champs (`creat_dt` → `creation_date`)
-  - Détection de champs similaires avec distance de Levenshtein
-  - Cache des mappings de normalisation
-- [ ] Middleware de validation automatique sur création/modification items
-- [ ] Endpoint `GET /metadata/schemas/{item_type}` pour schéma actuel par type
+### 7. Service de validation métadonnées initialisation
+- Créer `MetadataValidator` dans `utils/` :
+  - [x] v0: ne fais rien
+  - [ ] v1:
+    - Normalisation des noms de champs (`creat_dt` → `creation_date`)
+    - Détection de champs similaires avec distance de Levenshtein
+    - Cache des mappings de normalisation
+- [x] Middleware de validation automatique sur création/modification items
+- [x] Détecter la création d'un nouveau type d'item (type inconnu dans la table des schémas) et créer automatiquement une première version du schéma pour ce type
+- [x] Détecter la modification du schéma d'un type d'item existant (différence avec la dernière version connue) et créer automatiquement une nouvelle version du schéma dans la table
+- [x] Historiser chaque évolution de schéma d'item (création, modification) dans la collection `item_schemas`
 
 ## 🤖 Intégration IA & MCP
 
-### 8. Setup LangGraph + MCP
+### 8. Tools MCP pour LLM
+- [x] Initialiser `mcp/src/mcp_service.py`
+- [x] Tool `create_item` : 
+  - création d’un item (titre, type, descriptions, board_id optionnel, status, checklist, metadata dynamique), 
+  - validation automatique, 
+  - assignation board automatique ou création si besoin.
+- [x] Tool `update_item` : 
+  - modification d’un item existant (id + champs à modifier, fusion métadonnées, versionnement schéma si besoin).
+- [x] Tool `list_items` : 
+  - recherche d’items avec filtres (board_id, type, status, query texte).
+- [x] Tool `create_board` : 
+  - création d’un board (nom, description, couleur, metadata).
+- [x] Tool `update_status` : 
+  - changement rapide du statut d’un item (id, status).
+- [x] Tool `find_related_items` : 
+  - recherche d’items similaires (par id ou texte, limite paramétrable).
+- [x] Test de chaque tool individuellement avec appels directs (MCP Inspector ou client de test)
+
+### 9. Setup LangGraph + MCP
 - [ ] Installer `langgraph`, `langchain`, SDK MCP
 - [ ] Créer `ai_service.py` pour orchestration IA :
   - Client LLM (OpenAI/Anthropic via variables env)
@@ -119,18 +155,6 @@
   - Exposition tools pour LLM
   - Gestion authentification MCP
   - Logging des actions automatiques
-
-### 9. Tools MCP pour LLM
-- [ ] Tool `create_item` :
-  - Créer item avec métadonnées dynamiques
-  - Validation automatique des champs
-  - Assignation board automatique ou création nouveau
-- [ ] Tool `update_item` : Modification item existant avec merge métadonnées
-- [ ] Tool `list_items` : Recherche items avec filtres par board/type/statut
-- [ ] Tool `create_board` : Création board avec configuration automatique
-- [ ] Tool `update_status` : Changement rapide de statut
-- [ ] Tool `find_related_items` : Recherche d'items similaires par contenu
-- [ ] Test de chaque tool individuellement avec appels directs
 
 ### 10. Endpoint IA principal
 - [ ] Router `ai.py` avec endpoint `POST /ai/process` :

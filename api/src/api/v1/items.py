@@ -1,0 +1,55 @@
+from fastapi import APIRouter, HTTPException, status, Body
+from typing import List
+from models.item import Item
+from beanie import PydanticObjectId
+
+router = APIRouter(
+    prefix="/items",
+    tags=["items"]
+)
+
+@router.get("/by_board/{board_id}", response_model=List[Item])
+async def get_items_by_board(board_id: str):
+    return await Item.find(Item.board_id == board_id).to_list()
+
+@router.post("/", response_model=Item, status_code=status.HTTP_201_CREATED)
+async def create_item(item: Item):
+    await item.insert()
+    return item
+
+@router.get("/{id}", response_model=Item)
+async def get_item(id: PydanticObjectId):
+    item = await Item.get(id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return item
+
+@router.put("/{id}", response_model=Item)
+async def update_item(id: PydanticObjectId, item_data: Item):
+    item = await Item.get(id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    update_data = item_data.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(item, field, value)
+    await item.save()
+    return item
+
+
+@router.patch("/{id}", response_model=Item)
+async def patch_item(id: PydanticObjectId, patch_data: dict = Body(...)):
+    item = await Item.get(id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    for field, value in patch_data.items():
+        setattr(item, field, value)
+    await item.save()
+    return item
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_item(id: PydanticObjectId):
+    item = await Item.get(id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    await item.delete()
+    return None

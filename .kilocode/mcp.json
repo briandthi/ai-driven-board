@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ai-drive board": {
+      "url": "http://0.0.0.0:9000/sse",
+      "transport": "sse",
+      "disabledTools": [],
+      "alwaysAllow": [
+        "list_items"
+      ]
+    }
+  }
+}
