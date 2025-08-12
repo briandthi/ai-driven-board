@@ -311,4 +311,5 @@ async def delete_item(
             logger.error(f"Exception lors de l'appel API: {str(e)}")
             return {"success": False, "error": str(e)}
 if __name__ == "__main__":
-    mcp.run(transport='sse')
+    # Utilisation du transport HTTP streamable (POST/GET/SSE) recommandé pour reverse proxy
+    mcp.run(transport='streamable-http')
