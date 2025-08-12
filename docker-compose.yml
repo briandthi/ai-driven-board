@@ -83,16 +83,14 @@ services:
       - "9000"
     labels:
       - "traefik.enable=true"
-      # Nouveau path pour Streamable HTTP (plus de /sse, maintenant /mcp)
       - "traefik.http.routers.mcp.rule=Host(`mcp.notes.thibaultbriand.fr`)"
       - "traefik.http.routers.mcp.entrypoints=websecure"
       - "traefik.http.routers.mcp.tls.certresolver=myresolver"
       - "traefik.http.services.mcp.loadbalancer.server.port=9000"
       
-      # Configuration simplifiée - plus besoin des headers SSE spéciaux
-      - "traefik.http.routers.mcp.middlewares=mcp-headers"
-      - "traefik.http.middlewares.mcp-headers.headers.customresponseheaders.X-Frame-Options=DENY"
-      - "traefik.http.middlewares.mcp-headers.headers.customresponseheaders.X-Content-Type-Options=nosniff"
+      # Important pour SSE
+      - "traefik.http.services.mcp.loadbalancer.server.scheme=http"
+      - "traefik.http.middlewares.sse-headers.headers.customResponseHeaders.Cache-Control=no-cache"
 
 volumes:
   mongo_data:
