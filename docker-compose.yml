@@ -11,7 +11,7 @@ services:
       - webproxy
       - aidrivenboard_internal
     expose:
-      - "27017"  # accessible uniquement en interne sur les réseaux
+      - "27017" # accessible uniquement en interne sur les réseaux
 
   api:
     build:
@@ -76,6 +76,7 @@ services:
       API_URL: http://api:8000
     networks:
       - webproxy
+      - aidrivenboard_internal
     depends_on:
       - api
     expose:
@@ -93,7 +94,7 @@ services:
 
       # Associe seulement le middleware sse-headers, PAS strip-mcp
       - "traefik.http.routers.mcp.middlewares=sse-headers"
-      
+
 volumes:
   mongo_data:
 
