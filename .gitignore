@@ -145,3 +145,4 @@ api/__pycache__/
 mongo/dump/
 mongo/data/
 docker-compose.override.yml
+venv
