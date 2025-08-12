@@ -40,11 +40,6 @@ services:
       - mongodb
     expose:
       - "8000"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   app:
     build:
@@ -63,11 +58,6 @@ services:
       - api
     expose:
       - "80"
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ai-driven-board.rule=Host(`notes.thibaultbriand.fr`)"
