@@ -76,7 +76,6 @@ services:
       API_URL: http://api:8000
     networks:
       - webproxy
-      - aidrivenboard_internal
     depends_on:
       - api
     expose:
