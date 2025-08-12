@@ -87,10 +87,16 @@ services:
       - "traefik.http.routers.mcp.entrypoints=websecure"
       - "traefik.http.routers.mcp.tls.certresolver=myresolver"
       - "traefik.http.services.mcp.loadbalancer.server.port=9000"
-      
-      # Important pour SSE
       - "traefik.http.services.mcp.loadbalancer.server.scheme=http"
+
+      # Middleware pour SSE + Cache-Control
       - "traefik.http.middlewares.sse-headers.headers.customResponseHeaders.Cache-Control=no-cache"
+
+      # Strip /mcp prefix pour que MCP recoive /
+      - "traefik.http.middlewares.strip-mcp.stripPrefix.prefixes=/mcp"
+
+      # Associe le middleware au routeur
+      - "traefik.http.routers.mcp.middlewares=strip-mcp,sse-headers"
 
 volumes:
   mongo_data:
