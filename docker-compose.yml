@@ -83,21 +83,16 @@ services:
       - "9000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.mcp.rule=Host(`mcp.notes.thibaultbriand.fr`) && PathPrefix(`/mcp`)"
+      # Nouveau path pour Streamable HTTP (plus de /sse, maintenant /mcp)
+      - "traefik.http.routers.mcp.rule=Host(`mcp.notes.thibaultbriand.fr`)"
       - "traefik.http.routers.mcp.entrypoints=websecure"
       - "traefik.http.routers.mcp.tls.certresolver=myresolver"
       - "traefik.http.services.mcp.loadbalancer.server.port=9000"
-
-      # Configuration SSE avec timeouts étendus (conservée pour compatibilité SSE)
-      - "traefik.http.routers.mcp.middlewares=mcp-sse"
-      - "traefik.http.middlewares.mcp-sse.headers.customresponseheaders.Content-Type=text/event-stream"
-      - "traefik.http.middlewares.mcp-sse.headers.customresponseheaders.Cache-Control=no-cache"
-      - "traefik.http.middlewares.mcp-sse.headers.customresponseheaders.Connection=keep-alive"
-      - "traefik.http.middlewares.mcp-sse.headers.customresponseheaders.X-Accel-Buffering=no"
-
-      # Timeouts spécifiques au service MCP
-      - "traefik.http.services.mcp.loadbalancer.responseForwarding.flushInterval=1s"
-      - "traefik.http.services.mcp.loadbalancer.healthcheck.timeout=30s"
+      
+      # Configuration simplifiée - plus besoin des headers SSE spéciaux
+      - "traefik.http.routers.mcp.middlewares=mcp-headers"
+      - "traefik.http.middlewares.mcp-headers.headers.customresponseheaders.X-Frame-Options=DENY"
+      - "traefik.http.middlewares.mcp-headers.headers.customresponseheaders.X-Content-Type-Options=nosniff"
 
 volumes:
   mongo_data:
