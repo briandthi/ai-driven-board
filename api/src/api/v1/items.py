@@ -42,7 +42,14 @@ async def patch_item(id: PydanticObjectId, patch_data: dict = Body(...)):
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
     for field, value in patch_data.items():
-        setattr(item, field, value)
+        if field == "metadata" and isinstance(value, dict):
+            # Fusionner intelligemment les metadata
+            current_metadata = getattr(item, "metadata", {}) or {}
+            updated_metadata = current_metadata.copy()
+            updated_metadata.update(value)
+            setattr(item, "metadata", updated_metadata)
+        else:
+            setattr(item, field, value)
     await item.save()
     return item
 
