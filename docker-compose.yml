@@ -82,7 +82,7 @@ services:
       - "9000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.mcp.rule=Host(`mcp.notes.thibaultbriand.fr`)"
+      - "traefik.http.routers.mcp.rule=Host(`mcp.notes.thibaultbriand.fr`) && PathPrefix(`/mcp`)"
       - "traefik.http.routers.mcp.entrypoints=websecure"
       - "traefik.http.routers.mcp.tls.certresolver=myresolver"
       - "traefik.http.services.mcp.loadbalancer.server.port=9000"
@@ -91,12 +91,9 @@ services:
       # Middleware pour SSE + Cache-Control
       - "traefik.http.middlewares.sse-headers.headers.customResponseHeaders.Cache-Control=no-cache"
 
-      # Strip /mcp prefix pour que MCP recoive /
-      - "traefik.http.middlewares.strip-mcp.stripPrefix.prefixes=/mcp"
-
-      # Associe le middleware au routeur
-      - "traefik.http.routers.mcp.middlewares=strip-mcp,sse-headers"
-
+      # Associe seulement le middleware sse-headers, PAS strip-mcp
+      - "traefik.http.routers.mcp.middlewares=sse-headers"
+      
 volumes:
   mongo_data:
 
