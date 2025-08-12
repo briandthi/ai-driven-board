@@ -88,11 +88,16 @@ services:
       - "traefik.http.routers.mcp.tls.certresolver=myresolver"
       - "traefik.http.services.mcp.loadbalancer.server.port=9000"
       
-      # Headers SSE
+      # Configuration SSE avec timeouts étendus
       - "traefik.http.routers.mcp.middlewares=mcp-sse"
       - "traefik.http.middlewares.mcp-sse.headers.customresponseheaders.Content-Type=text/event-stream"
       - "traefik.http.middlewares.mcp-sse.headers.customresponseheaders.Cache-Control=no-cache"
       - "traefik.http.middlewares.mcp-sse.headers.customresponseheaders.Connection=keep-alive"
+      - "traefik.http.middlewares.mcp-sse.headers.customresponseheaders.X-Accel-Buffering=no"
+      
+      # Timeouts spécifiques au service MCP
+      - "traefik.http.services.mcp.loadbalancer.responseForwarding.flushInterval=1s"
+      - "traefik.http.services.mcp.loadbalancer.healthcheck.timeout=30s"
 
 volumes:
   mongo_data:
