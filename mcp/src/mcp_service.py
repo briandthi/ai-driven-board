@@ -193,15 +193,65 @@ async def update_item(
         
 @mcp.tool()
 async def list_items(
-    board_id: str
+    board_id: str,
+    filters: Dict = None
 ) -> Dict:
     """
-    List all items for a given board.
+    Liste les items d'un board avec filtrage dynamique sur tous les champs, y compris metadata.
+
+    Ce tool permet de récupérer tous les items d'un board, en appliquant des filtres dynamiques sur n'importe quel champ du modèle Item,
+    y compris à l'intérieur du champ metadata. Les filtres sont transmis sous forme de dictionnaire clé/valeur, et peuvent être combinés.
+
+    Args:
+        board_id (str): L'identifiant du board à interroger. Obligatoire.
+        filters (dict, optionnel): Dictionnaire de filtres à appliquer. Les clés correspondent aux champs du modèle Item.
+            Pour filtrer dans metadata, utiliser la syntaxe "metadata.<clé>" (ex: "metadata.priority").
+            Exemple: {"status": "todo", "type": "feature", "metadata.priority": "high"}
+
+    Returns:
+        dict: Un dictionnaire contenant la liste des items filtrés sous la clé "items".
+
+    Exemple d'appel:
+        >>> list_items(
+        ...     board_id="689b28b3c9a050f2cb476051",
+        ...     filters={"status": "todo", "type": "feature", "metadata.priority": "high"}
+        ... )
+        {
+            "items": [
+                {
+                    "id": "...",
+                    "title": "...",
+                    "type": "feature",
+                    "status": "todo",
+                    "metadata": {"priority": "high", ...},
+                    ...
+                },
+                ...
+            ]
+        }
+
+    Notes:
+        - Tous les filtres sont combinés avec un ET logique (AND).
+        - Les clés de filtre peuvent cibler n'importe quel champ du modèle, y compris les sous-champs de metadata.
+        - Si filters est None ou vide, tous les items du board sont retournés.
+        - Pour filtrer sur plusieurs valeurs d'un même champ, appeler plusieurs fois ce tool ou faire le filtrage côté client.
+
     """
-    logger.info(f"GET {API_URL}/items/by_board/{board_id}")
+    # Construction de la query string
+    params = {"board_id": board_id}
+    if filters:
+        for k, v in filters.items():
+            params[k] = v
+    # Générer l'URL avec query params
+    from urllib.parse import urlencode
+    query = urlencode(params)
+    url = f"{API_URL}/items/by_board/{board_id}"
+    if query:
+        url = f"{url}?{urlencode({k: v for k, v in params.items() if k != 'board_id'})}"
+    logger.info(f"GET {url}")
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(f"{API_URL}/items/by_board/{board_id}")
+            response = await client.get(url)
             response.raise_for_status()
             return {"items": response.json()}
         except httpx.HTTPStatusError as e:

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Body
+from fastapi import APIRouter, HTTPException, status, Body, Request
 from typing import List
 from models.item import Item
 from beanie import PydanticObjectId
@@ -9,8 +9,21 @@ router = APIRouter(
 )
 
 @router.get("/by_board/{board_id}", response_model=List[Item])
-async def get_items_by_board(board_id: str):
-    return await Item.find(Item.board_id == board_id).to_list()
+async def get_items_by_board(board_id: str, request: Request):
+    # Récupérer tous les filtres de la query string
+    filters = []
+    filters.append(Item.board_id == board_id)
+    for key, value in request.query_params.items():
+        if key == "board_id":
+            continue  # déjà filtré
+        if key.startswith("metadata."):
+            meta_key = key.split(".", 1)[1]
+            filters.append(Item.metadata[meta_key] == value)
+        else:
+            filters.append(getattr(Item, key) == value)
+    # Combiner tous les filtres avec AND logique
+    # Correction : Beanie accepte *filters pour un AND logique
+    return await Item.find(*filters).to_list()
 
 @router.post("/", response_model=Item, status_code=status.HTTP_201_CREATED)
 async def create_item(item: Item):
