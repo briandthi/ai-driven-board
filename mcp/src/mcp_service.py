@@ -325,6 +325,32 @@ async def find_related_items(
             return {"error": str(e)}
 
 @mcp.tool()
+async def list_item_types() -> Dict:
+    """
+    Retourne la liste des types d'item connus.
+    Returns:
+        dict: Un dictionnaire contenant la liste des types sous la clé "types".
+
+    Exemple de retour:
+        {
+            "types": ["task", "feature", "bug", ...]
+        }
+    """
+    logger.info(f"GET {API_URL}/schemas/ pour la liste des types d'item")
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(f"{API_URL}/schemas/")
+            response.raise_for_status()
+            types = response.json()
+            return {"types": types}
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTPStatusError: {e.response.status_code} {e.response.text}")
+            return {"error": f"API error: {e.response.status_code} {e.response.text}"}
+        except Exception as e:
+            logger.error(f"Exception lors de l'appel API: {str(e)}")
+            return {"error": str(e)}
+
+@mcp.tool()
 async def delete_item(
     id: str
 ) -> Dict:
